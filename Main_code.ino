@@ -202,9 +202,9 @@ void loop()
   }
   else
   {
-    // If distance is less than 10 cm, turn on the red LED and turn off the green LED
-    digitalWrite(greenLedPin, HIGH);   // Turn off the green LED
-    digitalWrite(redLedPin, LOW);      // Turn on the red LED
+    //Any other case
+    digitalWrite(greenLedPin, HIGH);   // Turn on the green LED
+    digitalWrite(redLedPin, LOW);      // Turn off the red LED
 
     digitalWrite(dir, HIGH);      // Tighten the grip
     analogWrite(pwm, motorSpeed);  // Resume motor motion
