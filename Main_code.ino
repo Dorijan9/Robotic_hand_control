@@ -206,7 +206,7 @@ void loop()
     digitalWrite(greenLedPin, HIGH);   // Turn on the green LED
     digitalWrite(redLedPin, LOW);      // Turn off the red LED
 
-    digitalWrite(dir, HIGH);      // Tighten the grip
+    digitalWrite(dir, HIGH);      // Loosen the grip
     analogWrite(pwm, motorSpeed);  // Resume motor motion
   }
   delay(500); // You can adjust the delay as needed
