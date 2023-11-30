@@ -4,6 +4,7 @@
 #include <SR04.h>
 #include <Wire.h>
 #include <Adafruit_INA219.h>
+#include <Stepper.h>
 
 Adafruit_INA219 ina219;
 
@@ -32,6 +33,11 @@ float power_mW = 0;
 
 int buzzer = 10; // the pin of the active buzzer
 bool playBuzzer = true; // flag to control buzzer behavior
+
+const int stepsPerRevolution = 2048;  // change this to fit the number of steps per revolution
+const int rolePerMinute = 15;         // Adjustable range of 28BYJ-48 stepper is 0~17 rpm
+// initialize the stepper library on pins 8 through 11:
+Stepper myStepper(stepsPerRevolution, 8, 10, 9, 11);
 
 void playBuzzerOnce()
 {
@@ -99,115 +105,161 @@ void setup()
   display.display();
   delay(1200);
   display.clearDisplay();
+
+  myStepper.setSpeed(rolePerMinute);
+  // initialize the serial port:
 }
 
 void loop()
 {
-  if (playBuzzer)
+  int pushButtonValue = digitalRead(sw);
+  if (pushButtonValue == HIGH)
   {
-    playBuzzerOnce(); // Play the buzzer sound only once at the beginning
-  }
-
-  shuntvoltage = ina219.getShuntVoltage_mV();
-  busvoltage = ina219.getBusVoltage_V();
-  current_mA = ina219.getCurrent_mA();
-  power_mW = ina219.getPower_mW();
-  loadvoltage = busvoltage + (shuntvoltage / 1000);
-
-  Serial.print("Bus Voltage:   ");
-  Serial.print(busvoltage);
-  Serial.println(" V");
-  Serial.print("Shunt Voltage: ");
-  Serial.print(shuntvoltage);
-  Serial.println(" mV");
-  Serial.print("Load Voltage:  ");
-  Serial.print(loadvoltage);
-  Serial.println(" V");
-  Serial.print("Current:       ");
-  Serial.print(current_mA);
-  Serial.println(" mA");
-  Serial.print("Power:         ");
-  Serial.print(power_mW);
-  Serial.println(" mW");
-  Serial.println("");
-
-  display.clearDisplay();
-
-  // Read distance from the SR04 sensor
-  long distance = sr04.Distance();
-  // Read force from the force sensor
-  int forceValue = analogRead(A0);
-
-  // Display "Distance", "Force" and "Current" at the top
-  display.setTextSize(1);
-  display.setCursor(20, 0);
-  display.println("Distance");
-  display.setCursor(20, 15);
-  display.println("Force");
-  display.setCursor(20, 30);
-  display.println("Current");
-
-  // Display the actual measurement at the bottom
-  display.setTextSize(1);
-  display.setCursor(80, 0);
-  display.println(distance);
-  display.setCursor(110, 0);
-  display.println("cm");
-  display.setCursor(80, 15);
-  display.println(forceValue);
-  display.setCursor(110, 15);
-  display.println("N");
-  display.setCursor(80, 30);
-  display.println(current_mA);
-  display.setCursor(110, 30);
-  display.println("mA");
-  display.display();
-
-  // Control the gripper based on the distance and force
-  if (distance < 10 && forceValue < 10)
-  {
-    // If distance is less than 10 cm, turn on the red LED and turn off the green LED
-    digitalWrite(greenLedPin, LOW);   // Turn off the green LED
-    digitalWrite(redLedPin, HIGH);      // Turn on the red LED
-
-    digitalWrite(dir, LOW);      // Tighten the grip
-    analogWrite(pwm, motorSpeed);  // Resume motor motion
-  }
-  else if (distance < 10 && forceValue > 10)
-  {
-    // If distance is 10 cm or more and force value is above 5, turn on the green LED and turn off the red LED
-    digitalWrite(greenLedPin, HIGH);    // Turn on the green LED
-    digitalWrite(redLedPin, LOW);     // Turn off the red LED
-
-    digitalWrite(dir, HIGH);       // Loosen the grip
-    analogWrite(pwm, motorSpeed);  // Resume motor motion 
-  }
-  else if (distance > 10 && forceValue < 10)
-  {
-    // If distance is 10 cm or more, and force value is 5 or above, turn on the green LED and turn off the red LED
-    digitalWrite(greenLedPin, HIGH);    // Turn on the green LED
-    digitalWrite(redLedPin, LOW);     // Turn off the red LED
-
-    digitalWrite(dir, HIGH);      // Loosen the grip
-    analogWrite(pwm, motorSpeed);  // Resume motor motion
-  }
-  else if (distance > 10 && forceValue > 10)
-  {
-    // If distance is 10 cm or more, and force value is 5 or above, turn on the green LED and turn off the red LED
-    digitalWrite(greenLedPin, HIGH);    // Turn on the green LED
-    digitalWrite(redLedPin, LOW);     // Turn off the red LED
-
-    digitalWrite(dir, HIGH);      // Loosen the grip
-    analogWrite(pwm, motorSpeed);  // Resume motor motion
+    if (playBuzzer)
+    {
+      playBuzzerOnce(); // Play the buzzer sound only once at the beginning
+    }
+  
+    shuntvoltage = ina219.getShuntVoltage_mV();
+    busvoltage = ina219.getBusVoltage_V();
+    current_mA = ina219.getCurrent_mA();
+    power_mW = ina219.getPower_mW();
+    loadvoltage = busvoltage + (shuntvoltage / 1000);
+  
+    Serial.print("Bus Voltage:   ");
+    Serial.print(busvoltage);
+    Serial.println(" V");
+    Serial.print("Shunt Voltage: ");
+    Serial.print(shuntvoltage);
+    Serial.println(" mV");
+    Serial.print("Load Voltage:  ");
+    Serial.print(loadvoltage);
+    Serial.println(" V");
+    Serial.print("Current:       ");
+    Serial.print(current_mA);
+    Serial.println(" mA");
+    Serial.print("Power:         ");
+    Serial.print(power_mW);
+    Serial.println(" mW");
+    Serial.println("");
+  
+    display.clearDisplay();
+  
+    // Read distance from the SR04 sensor
+    long distance = sr04.Distance();
+    // Read force from the force sensor
+    int forceValue = analogRead(A0);
+  
+    // Display "Distance", "Force" and "Current" at the top
+    display.setTextSize(1);
+    display.setCursor(20, 0);
+    display.println("Distance");
+    display.setCursor(20, 15);
+    display.println("Force");
+    display.setCursor(20, 30);
+    display.println("Current");
+  
+    // Display the actual measurement at the bottom
+    display.setTextSize(1);
+    display.setCursor(80, 0);
+    display.println(distance);
+    display.setCursor(110, 0);
+    display.println("cm");
+    display.setCursor(80, 15);
+    display.println(forceValue);
+    display.setCursor(110, 15);
+    display.println("N");
+    display.setCursor(80, 30);
+    display.println(current_mA);
+    display.setCursor(110, 30);
+    display.println("mA");
+    display.display();
+  
+    // Control the gripper based on the distance and force
+    if (distance < 10 && forceValue < 10)
+    {
+      // If distance is less than 10 cm, turn on the red LED and turn off the green LED
+      digitalWrite(greenLedPin, LOW);   // Turn off the green LED
+      digitalWrite(redLedPin, HIGH);      // Turn on the red LED
+  
+      digitalWrite(dir, LOW);      // Tighten the grip
+      analogWrite(pwm, motorSpeed);  // Resume motor motion
+    }
+    else if (distance < 10 && forceValue > 10)
+    {
+      // If distance is 10 cm or more and force value is above 5, turn on the green LED and turn off the red LED
+      digitalWrite(greenLedPin, HIGH);    // Turn on the green LED
+      digitalWrite(redLedPin, LOW);     // Turn off the red LED
+  
+      digitalWrite(dir, HIGH);       // Loosen the grip
+      analogWrite(pwm, motorSpeed);  // Resume motor motion 
+    }
+    else if (distance > 10 && forceValue < 10)
+    {
+      // If distance is 10 cm or more, and force value is 5 or above, turn on the green LED and turn off the red LED
+      digitalWrite(greenLedPin, HIGH);    // Turn on the green LED
+      digitalWrite(redLedPin, LOW);     // Turn off the red LED
+  
+      digitalWrite(dir, HIGH);      // Loosen the grip
+      analogWrite(pwm, motorSpeed);  // Resume motor motion
+    }
+    else if (distance > 10 && forceValue > 10)
+    {
+      // If distance is 10 cm or more, and force value is 5 or above, turn on the green LED and turn off the red LED
+      digitalWrite(greenLedPin, HIGH);    // Turn on the green LED
+      digitalWrite(redLedPin, LOW);     // Turn off the red LED
+  
+      digitalWrite(dir, HIGH);      // Loosen the grip
+      analogWrite(pwm, motorSpeed);  // Resume motor motion
+    }
+    else
+    {
+      //Any other case
+      digitalWrite(greenLedPin, HIGH);   // Turn on the green LED
+      digitalWrite(redLedPin, LOW);      // Turn off the red LED
+  
+      digitalWrite(dir, HIGH);      // Loosen the grip
+      analogWrite(pwm, motorSpeed);  // Resume motor motion
+    }
   }
   else
   {
-    //Any other case
-    digitalWrite(greenLedPin, HIGH);   // Turn on the green LED
-    digitalWrite(redLedPin, LOW);      // Turn off the red LED
-
-    digitalWrite(dir, HIGH);      // Loosen the grip
+    motorSpeed = 0;
+    digitalWrite(greenLedPin, LOW);   // Turn off the green LED
+    digitalWrite(redLedPin, LOW);      // Turn on the red LED
     analogWrite(pwm, motorSpeed);  // Resume motor motion
+    int distance2 = 0;
+    int forceValue2 = 0;
+    int current_mA2 = 0;
+    // Display the actual measurement at the bottom
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setCursor(80, 0);
+    display.println(distance2);
+    display.setCursor(110, 0);
+    display.println("cm");
+    display.setCursor(80, 15);
+    display.println(forceValue2);
+    display.setCursor(110, 15);
+    display.println("N");
+    display.setCursor(80, 30);
+    display.println(current_mA2);
+    display.setCursor(110, 30);
+    display.println("mA");
+    display.display();
+
+    // step one revolution  in one direction:
+    Serial.println("clockwise");
+    myStepper.step(stepsPerRevolution);
+    delay(500);
+
+    // step one revolution in the other direction:
+    Serial.println("counterclockwise");
+    myStepper.step(-stepsPerRevolution);
+    delay(500);
+    digitalWrite(8, LOW);  
+    digitalWrite(9, LOW);   
+    digitalWrite(10, LOW);   
+    digitalWrite(11, LOW);      
   }
-  delay(500); // You can adjust the delay as needed
 }
