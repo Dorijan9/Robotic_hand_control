@@ -19,18 +19,18 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 
 SR04 sr04 = SR04(ECHO_PIN, TRIG_PIN);
 
-const int sw = 24;      // digital pin 2 will be used for the switch that can switch between the two robotic hand states of operation
-const int pwm = 32;      // digital pin 3 will be used for PWM (Pulse Width Modulation) output
-const int dir = 22;      // digital pin 8 will be used for high/low output
-const int greenLedPin = 36;  // analogue pin A2 for the green LED
-const int redLedPin = 28;    // analogue pin A1 for the red LED
+const int sw = 24;      // digital pin 24 will be used for the switch that can switch between the two robotic hand states of operation
+const int pwm = 32;      // digital pin 32 will be used for PWM (Pulse Width Modulation) output
+const int dir = 22;      // digital pin 22 will be used for high/low output
+const int greenLedPin = 36;  // digital pin 36 for the green LED
+const int redLedPin = 28;    // digital pin 28 for the red LED
 uint8_t motorSpeed = 120; // 8-bit unsigned integer (0-255) defining motor speed
 float shuntvoltage = 0;
 float busvoltage = 0;
 float current_mA = 0;
 float loadvoltage = 0;
 float power_mW = 0;
-const int buzzer = 30; // analogue pin A3 for the active buzzer
+const int buzzer = 30; // analogue pin 30 for the active buzzer
 bool playBuzzer = true; // flag to control buzzer behavior
 
 #define STEPS  32   // Number of steps per revolution of Internal shaft
