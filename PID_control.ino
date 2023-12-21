@@ -14,7 +14,7 @@ Adafruit_INA219 ina219;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 
 #define kp 1
-#define ki 0.002
+#define ki 0.02
 #define kd 5
 double priError = 0;
 double toError = 0;
@@ -35,7 +35,7 @@ const int pwm = 2;      // digital pin 2 will be used for PWM (Pulse Width Modul
 const int dir = 22;      // digital pin 22 will be used for high/low output
 const int greenLedPin = 36;  // digital pin 36 for the green LED
 const int redLedPin = 28;    // digital pin 28 for the red LED
-uint8_t motorSpeed = 200; // 8-bit unsigned integer (0-255) defining motor speed
+uint8_t motorSpeed = 230; // 8-bit unsigned integer (0-255) defining motor speed
 float shuntvoltage = 0;
 float busvoltage = 0;
 float current_mA = 0;
@@ -195,34 +195,28 @@ void playBuzzerOnce()
 
 void PID() 
 {
-  int setP = 300;
+  int setP = 250;
   double error = setP - avgCurrent;
+  Serial.println(error);
   double Pvalue = error * kp;
-    Serial.println("P");
-    Serial.println(Pvalue);
   double Ivalue = toError * ki;
-    Serial.println("I");
-    Serial.println(Ivalue);
+  Serial.println(Ivalue);
   double Dvalue = (error - priError) * kd;
-    Serial.println("D");
-    Serial.println(Dvalue); 
- 
+  Serial.println(Dvalue);
 
   double PIDvalue = Pvalue + Ivalue + Dvalue;
   priError = error;
   toError += error;
   current_new = (int)PIDvalue;
-  Serial.println("PID");
   Serial.println(current_new);
-  current_display=map(current_new,-1000,1000,200,400);
-  motorSpeed=map(current_new,-1000,1000,150,200);
-  Serial.println("Speed");
+  current_display=map(current_new,-1000,1000,100,300);
+  motorSpeed=map(current_new,-1000,1000,0,90);
   Serial.println(motorSpeed);
   if (current_new < 0) {
     motorSpeed = 0;
   }
-  if (current_new > 400) {
-    motorSpeed=200;
+  if (current_new > 800) {
+    motorSpeed=230;
   }
 }
 
@@ -290,6 +284,7 @@ void loop()
       playBuzzerOnce(); // Play the buzzer sound only once at the beginning
     }
 
+    motorSpeed = 180;
     shuntvoltage = ina219.getShuntVoltage_mV();
     busvoltage = ina219.getBusVoltage_V();
     current_mA = ina219.getCurrent_mA();
@@ -330,10 +325,9 @@ void loop()
     display.println("mA");
     display.display();
     delay(10);
-    Serial.println(motorSpeed);
-
+  
     // Control the gripper based on the distance and force
-    if (distance < 10 && forceValue < 10)
+    if (distance < 12 && forceValue < 800)
     {
       // If distance is less than 10 cm, turn on the red LED and turn off the green LED
       digitalWrite(greenLedPin, LOW);   // Turn off the green LED
@@ -342,7 +336,7 @@ void loop()
       digitalWrite(dir, LOW);      // Tighten the grip
       analogWrite(pwm, motorSpeed);  // Resume motor motion
     }
-    else if (distance < 10 && forceValue > 10)
+    else if (distance < 12 && forceValue > 800)
     {
       // If distance is 10 cm or more and force value is above 5, turn on the green LED and turn off the red LED
       digitalWrite(greenLedPin, HIGH);    // Turn on the green LED
@@ -351,7 +345,7 @@ void loop()
       digitalWrite(dir, HIGH);       // Loosen the grip
       analogWrite(pwm, motorSpeed);  // Resume motor motion 
     }
-    else if (distance > 10 && forceValue < 10)
+    else if (distance > 12 && forceValue < 800)
     {
       // If distance is 10 cm or more, and force value is 5 or above, turn on the green LED and turn off the red LED
       digitalWrite(greenLedPin, HIGH);    // Turn on the green LED
@@ -360,7 +354,7 @@ void loop()
       digitalWrite(dir, HIGH);      // Loosen the grip
       analogWrite(pwm, motorSpeed);  // Resume motor motion
     }
-    else if (distance > 10 && forceValue > 10)
+    else if (distance > 12 && forceValue > 800)
     {
       // If distance is 10 cm or more, and force value is 5 or above, turn on the green LED and turn off the red LED
       digitalWrite(greenLedPin, HIGH);    // Turn on the green LED
@@ -382,9 +376,7 @@ void loop()
   else
   {
     motorSpeed = 0;
-    digitalWrite(greenLedPin, LOW);   // Turn off the green LED
-    digitalWrite(redLedPin, LOW);      // Turn on the red LED
-    analogWrite(pwm, motorSpeed);  // Resume motor motion
+    analogWrite(pwm, motorSpeed); 
     const int distance2 = 0;
     const int forceValue2 = 0;
     const int current_mA2 = 0;
