@@ -1,3 +1,4 @@
+//Code is meant for Arduino Mega
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
